@@ -38,11 +38,11 @@ def main(
         task_prompt=task_prompt,
         num_roles=num_roles,
         role_names=role_names,
-        function_list=[*SEARCH_FUNCS],
+        function_list=[*SEARCH_FUNCS] if search_enabled else [],
     )
 
     # Split the original task into subtasks
-    num_subtasks=4
+    num_subtasks=None
     subtasks_with_dependencies_dict = multi_agent.split_tasks(
         task_prompt=task_prompt,
         role_descriptions_dict=role_descriptions_dict,
