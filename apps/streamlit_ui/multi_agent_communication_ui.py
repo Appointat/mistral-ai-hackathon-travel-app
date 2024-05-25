@@ -1,6 +1,8 @@
 import json
 
 import streamlit as st
+from PIL import Image
+
 from camel.agents.deductive_reasoner_agent import DeductiveReasonerAgent
 from camel.configs import ChatGPTConfig, FunctionCallingConfig
 from camel.functions import MATH_FUNCS, SEARCH_FUNCS
@@ -36,25 +38,32 @@ def main(
         task_prompt=task_prompt,
         num_roles=num_roles,
         role_names=role_names,
-        function_list=[],
+        function_list=[*SEARCH_FUNCS],
     )
 
     # Split the original task into subtasks
+    num_subtasks=4
     subtasks_with_dependencies_dict = multi_agent.split_tasks(
         task_prompt=task_prompt,
         role_descriptions_dict=role_descriptions_dict,
-        num_subtasks=None,
+        num_subtasks=num_subtasks,
         context_text=context_text,
     )
 
     # Draw the graph of the subtasks
     oriented_graph = {}
+    subtasks_image_path = "apps/streamlit_ui/task_dependency_graph.png"
     for subtask_idx, details in subtasks_with_dependencies_dict.items():
         deps = details["dependencies"]
         oriented_graph[subtask_idx] = deps
     multi_agent.draw_subtasks_graph(
         oriented_graph=oriented_graph,
-        graph_file_path="apps/streamlit_ui/task_dependency_graph.png",
+        graph_file_path=subtasks_image_path,
+    )
+    subtasks_image = Image.open(subtasks_image_path)
+    st.image(
+        subtasks_image, caption='Workflows of Task.',
+        use_column_width=True
     )
 
     # Get the list of subtasks
@@ -197,7 +206,7 @@ def main(
             )
 
             # Start the role-playing to complete the subtask
-            chat_turn_limit, n = 50, 0
+            chat_turn_limit, n = 30, 0
             input_msg = role_play_session.init_chat()
             while n < chat_turn_limit:
                 n += 1
@@ -243,6 +252,14 @@ def main(
                     role_name=ai_assistant_role,
                     message=assistant_response.msg.content,
                 )
+
+                # Avoid the repetition
+                if n % 5 == 0:
+                    assistant_response.msg.content += (
+                        "\n\n" + "To avoid repetitive conversations, " +
+                        "please make your next instruction different " +
+                        "from the previous one."
+                    )
 
                 # reproduced_assistant_msg_with_category = (
                 #     multi_agent.transform_dialogue_into_text(
@@ -395,7 +412,8 @@ def send_message_to_ui(role="", role_name="", message=""):
 
     with st.chat_message(role):
         st.write(
-            f"AI {role}: {role_name}\n\n" f"{message.replace('Next request.', '').replace("CAMEL_TASK_DONE", "TASK_DONE")}"
+            f"AI {role}: {role_name}\n\n"
+            f"{message.replace('Next request.', '').replace('CAMEL_TASK_DONE', 'TASK_DONE')}"
         )
 
     # Save the messages

@@ -1,1 +1,1 @@
-Create a detailed travel plan for a trip to France, including places to visit(attractions), accommodations, transportation and itinerary.
+Create a detailed travel plan for a trip to France, including places to visit(attractions based on the customer's preference), accommodations(schedule, place, price) and itinerary(transportation, schedule, budget).
