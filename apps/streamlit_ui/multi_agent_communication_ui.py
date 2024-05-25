@@ -1,45 +1,33 @@
-# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-# Licensed under the Apache License, Version 2.0 (the “License”);
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an “AS IS” BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
 import json
 
 import streamlit as st
 from camel.agents.deductive_reasoner_agent import DeductiveReasonerAgent
-from camel.agents.insight_agent import InsightAgent
-from camel.agents.multi_agent import MultiAgent
 from camel.configs import ChatGPTConfig, FunctionCallingConfig
 from camel.functions import MATH_FUNCS, SEARCH_FUNCS
 from camel.societies import RolePlaying
 from camel.types import ModelType, TaskType
 
+from agents.insight_agent import InsightAgent
+from agents.multi_agent import MultiAgent
 
 def main(
-    model_type=ModelType.GPT_4O,
+    model_type=ModelType.MISTRAL_7B,
     task_prompt=None,
     context_text=None,
     num_roles=None,
     search_enabled=False,
 ) -> None:
     # Model and agent initialization
-    model_config = ChatGPTConfig(max_tokens=2048, temperature=0)
+    model_type_json = ModelType.GPT_4O
+    model_config = ChatGPTConfig(max_tokens=4096, temperature=0)
 
     multi_agent = MultiAgent(
-        model_type=model_type,
+        model_type=model_type_json,
         model_config=model_config,
     )
-    insight_agent = InsightAgent(model_type=model_type, model_config=model_config)
+    insight_agent = InsightAgent(model_type=model_type_json, model_config=model_config)
     deductive_reasoner_agent = DeductiveReasonerAgent(
-        model_type=model_type, model_config=model_config
+        model_type=model_type_json, model_config=model_config
     )
 
     # Generate role with descriptions
@@ -130,7 +118,7 @@ def main(
         ai_user_description = role_descriptions_dict[ai_user_role]
 
         output_msg = ""
-        with st.expander(f"# {subtask_id}:\n\n{subtask}"):
+        with st.expander(f"# 🌲 {subtask_id}:\n\n{subtask}"):
             send_two_role_descriptions_to_ui(
                 ai_assistant_role=ai_assistant_role,
                 ai_user_role=ai_user_role,
@@ -256,19 +244,19 @@ def main(
                     message=assistant_response.msg.content,
                 )
 
-                reproduced_assistant_msg_with_category = (
-                    multi_agent.transform_dialogue_into_text(
-                        user_name=ai_user_role,
-                        assistant_name=ai_assistant_role,
-                        task_prompt=subtask,
-                        user_conversation=user_response.msg.content,
-                        assistant_conversation=assistant_response.msg.content,
-                    )
-                )
-                reproduced_assistant_msg = reproduced_assistant_msg_with_category[
-                    "text"
-                ]
-                output_msg += reproduced_assistant_msg + "\n"
+                # reproduced_assistant_msg_with_category = (
+                #     multi_agent.transform_dialogue_into_text(
+                #         user_name=ai_user_role,
+                #         assistant_name=ai_assistant_role,
+                #         task_prompt=subtask,
+                #         user_conversation=user_response.msg.content,
+                #         assistant_conversation=assistant_response.msg.content,
+                #     )
+                # )
+                # reproduced_assistant_msg = reproduced_assistant_msg_with_category[
+                #     "text"
+                # ]
+                # output_msg += reproduced_assistant_msg + "\n"
 
                 if (
                     "CAMEL_TASK_DONE" in user_response.msg.content
@@ -293,8 +281,8 @@ def main(
                 labels_key = tuple(insight["entity_recognition"])
                 environment_record[labels_key] = insight
 
-        with st.expander(f"# {subtask_id}:\n\nSummary"):
-            send_summary_to_ui(output_msg=output_msg)
+        # with st.expander(f"# {subtask_id}:\n\nSummary"):
+        #     send_summary_to_ui(output_msg=output_msg)
 
 
 def get_insights_from_environment(
@@ -380,7 +368,7 @@ def send_two_role_descriptions_to_ui(
 
 
 def send_subtasks_to_ui(subtasks=[]):
-    with st.expander("# Subtasks:"):
+    with st.expander("# 🦊 Subtasks:"):
         for i, subtask in enumerate(subtasks):
             st.write(f"Subtask {i + 1}:")
             st.write(subtask)
@@ -407,7 +395,7 @@ def send_message_to_ui(role="", role_name="", message=""):
 
     with st.chat_message(role):
         st.write(
-            f"AI {role}: {role_name}\n\n" f"{message.replace('Next request.', '')}"
+            f"AI {role}: {role_name}\n\n" f"{message.replace('Next request.', '').replace("CAMEL_TASK_DONE", "TASK_DONE")}"
         )
 
     # Save the messages

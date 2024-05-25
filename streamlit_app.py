@@ -1,17 +1,3 @@
-# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-# Licensed under the Apache License, Version 2.0 (the “License”);
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an “AS IS” BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# =========== Copyright 2023 @ CAMEL-AI.org. All Rights Reserved. ===========
-
 import os
 
 import streamlit as st
@@ -24,7 +10,7 @@ from camel.types import ModelType
 from apps.streamlit_ui.multi_agent_communication_ui import main
 
 # Set the title for the Streamlit app
-st.title("🐫 CAMEL Multi-Agent")
+st.title("🪄 Mistral.AI Multi-Agent")
 
 # Create a sidebar with form elements
 with st.sidebar:
@@ -33,23 +19,18 @@ with st.sidebar:
         # openai_api_key = st.text_input(
         #     "OpenAI API Key", key="api_key_openai", type="password"
         # )
-        groq_api_key = st.text_input(
-            "Groq API Key", key="api_key_groq", type="password"
-        )
-        # os.environ["OPENAI_API_KEY"] = openai_api_key
-        os.environ["GROQ_API_KEY"] = groq_api_key
+        # mistralai_api_key = st.text_input(
+        #     "Mistral.AI API Key", key="api_key_groq", type="password"
+        # )
+        # os.environ["OPENAI_API_KEY"] = mistralai_api_key
+        # os.environ["MISTRAL_API_KEY"] = mistralai_api_key
 
         # Enable functionality of the web browsing
         search_enabled = st.checkbox("Enable Web Browsing (it may take time)")
         if search_enabled:
-            google_api_key = st.text_input(
-                "Google API Key", key="api_key_google", type="password"
-            )
-            search_engine_id = st.text_input(
-                "Search Engine ID", key="search_engine_id", type="password"
-            )
-            os.environ["GOOGLE_API_KEY"] = google_api_key
-            os.environ["SEARCH_ENGINE_ID"] = search_engine_id
+            google_api_key = os.environ["GOOGLE_API_KEY"]
+            search_engine_id = os.environ["SEARCH_ENGINE_ID"]
+
 
         # File uploader for users to upload a document
         uploaded_file = st.file_uploader(
@@ -63,7 +44,7 @@ with st.sidebar:
 
             # Create an instance of the OpenAI model
             my_openai_model = OpenAIModel(
-                model_type=ModelType.GPT_3_5_TURBO,
+                model_type=ModelType.MISTRAL_7B,
                 model_config_dict=ChatGPTConfig().__dict__,
             )
 
@@ -123,9 +104,9 @@ with st.sidebar:
             )
         else:
             # Set default values for task prompt and context content
-            with open("examples/task_prompt_business_novel.txt", "r") as file:
+            with open("examples/task_prompt_trip_planning.txt", "r") as file:
                 task_prompt_business_novel = file.read()
-            with open("examples/task_prompt_business_novel.txt", "r") as file:
+            with open("examples/context_content_trip_planning.txt", "r") as file:
                 context_content_business_novel = file.read()
             task_prompt = st.text_area(
                 "Insert the task here", value=task_prompt_business_novel
@@ -138,7 +119,7 @@ with st.sidebar:
         submit_button = st.form_submit_button(label="Submit")
 
 # Check if all required inputs are provided and the submit button is clicked
-if openai_api_key and task_prompt and context_text and submit_button:
+if task_prompt and context_text and submit_button:
     if search_enabled and (google_api_key is None or search_engine_id is None):
         st.warning(
             "Please provide Google API Key and Search Engine ID to "
