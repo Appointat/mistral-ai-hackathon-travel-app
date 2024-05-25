@@ -1,0 +1,1 @@
+# mistral-ai-hackathon-travel-app
