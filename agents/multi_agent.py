@@ -511,10 +511,19 @@ Your answer MUST strictly adhere to the structure of ANSWER TEMPLATE, ONLY fill 
                 "graph."
             )
 
-        for subtask, details in oriented_graph.items():
-            for dep in details:
+        # Ensure all nodes are added to the graph, even if they have no edges
+        for subtask in oriented_graph:
+            if len(oriented_graph[subtask]) == 0:
+                G.add_node(subtask)  # Add the node if it has no dependencies
+            for dep in oriented_graph[subtask]:
                 G.add_edge(dep, subtask)
+                if dep not in G:
+                    G.add_node(dep)  # Ensure dependency is also added as a node
+
+        # Choose a layout for the nodes
         pos = nx.spring_layout(G, k=0.5)
+
+        # Create figure for drawing
         plt.figure(figsize=(10, 6))
         plt.title("Task Dependency Graph")
 

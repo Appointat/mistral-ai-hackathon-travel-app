@@ -1,0 +1,12 @@
+### Requirements:
+- **Programming Language**: Choose between Python and Java for backend development.
+- **Framework Suggestions**:
+  - If Python is chosen, consider using Flask or Django due to their robustness and ease of use.
+  - If Java is chosen, Spring Boot is recommended for its comprehensive infrastructure support for developing web applications.
+- **Features**:
+  - A homepage displaying a brief overview of what users can learn.
+  - A searchable database of snakes.
+  - Pages for each snake species that include pictures, common names, scientific names, habitat descriptions, and conservation status.
+  - Interactive elements such as quizzes or maps showing geographic distribution.
+- **Deployment**:
+  - The application should be deployable on a local server to allow for easy testing and modification before considering broader deployment.
