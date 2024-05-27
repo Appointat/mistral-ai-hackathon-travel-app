@@ -10,7 +10,7 @@ from camel.types import ModelType
 from apps.streamlit_ui.multi_agent_communication_ui import main
 
 # Set the title for the Streamlit app
-st.title("🪄 Mistral.AI Multi-Agent")
+st.title("🪄 DeepThinker: integration of agents")
 
 # Create a sidebar with form elements
 with st.sidebar:
@@ -104,9 +104,9 @@ with st.sidebar:
             )
         else:
             # Set default values for task prompt and context content
-            with open("examples/task_prompt_trip_planning.txt", "r") as file:
+            with open("examples/task_prompt_students_evaluation.txt", "r") as file:
                 task_prompt_business_novel = file.read()
-            with open("examples/context_content_trip_planning.txt", "r") as file:
+            with open("examples/context_content_students_evaluation.txt", "r") as file:
                 context_content_business_novel = file.read()
             task_prompt = st.text_area(
                 "Insert the task here", value=task_prompt_business_novel
