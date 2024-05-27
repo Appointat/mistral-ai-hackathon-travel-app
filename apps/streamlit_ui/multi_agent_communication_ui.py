@@ -225,7 +225,7 @@ def main(
             )
 
             # Start the role-playing to complete the subtask
-            chat_turn_limit, n = 20, 0
+            chat_turn_limit, n = 4, 0
             input_msg = role_play_session.init_chat()
             while n < chat_turn_limit:
                 n += 1
@@ -302,13 +302,13 @@ def main(
                         ASSISTANT_PREPOST_RUN_PROMPT,
                         ASSISTANT_FINALIZATION_PROMPT,
                     )
-                    user_response.msg.content = str(ASSISTANT_PREPOST_RUN_PROMPT)
-                    input_msg = user_response.msg
-                    assistant_response, user_response = role_play_session.step(input_msg)
+                    assistant_response.msg.content += ASSISTANT_PREPOST_RUN_PROMPT
+                    _input_msg = assistant_response.msg
+                    assistant_response, user_response = role_play_session.step(_input_msg)
                     for _ in range(2):
-                        user_response.msg.content = str(ASSISTANT_FINALIZATION_PROMPT)
-                        input_msg = user_response.msg
-                        assistant_response, user_response = role_play_session.step(input_msg)
+                        assistant_response.msg.content += str(ASSISTANT_FINALIZATION_PROMPT)
+                        _input_msg = assistant_response.msg
+                        assistant_response, user_response = role_play_session.step(_input_msg)
 
                     output_msg = assistant_response.msg.content.replace('CAMEL_TASK_DONE', '')
                     subtask_output_msgs.append(output_msg)
