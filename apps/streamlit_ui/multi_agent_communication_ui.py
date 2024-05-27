@@ -1,4 +1,4 @@
-import json
+import json, re
 
 import streamlit as st
 from PIL import Image
@@ -21,6 +21,7 @@ def main(
     search_enabled=False,
 ) -> None:
     # Model and agent initialization
+    model_type = ModelType.GPT_4O
     model_type_json = ModelType.GPT_4O
     model_config = ChatGPTConfig(max_tokens=4096, temperature=0)
 
@@ -148,18 +149,32 @@ def main(
             )
 
             # You can use the following code to play the role-playing game
-            sys_msg_meta_dicts = [
-                dict(
-                    assistant_role=ai_assistant_role,
-                    user_role=ai_user_role,
-                    assistant_description=ai_assistant_description
-                    + "\nAnd I have the ability to call the function "
-                    + "search_google_and_summarize.\n"
-                    + insights_for_subtask,
-                    user_description=ai_user_description + "\n" + "",
-                )
-                for _ in range(2)
-            ]  # System message meta data dicts
+            if search_enabled:
+                sys_msg_meta_dicts = [
+                    dict(
+                        assistant_role=ai_assistant_role,
+                        user_role=ai_user_role,
+                        assistant_description=ai_assistant_description
+                        + "\nAnd I have the ability to call the function "
+                        + "search_google_and_summarize.\n"
+                        + insights_for_subtask,
+                        user_description=ai_user_description + "\n" + "",
+                    )
+                    for _ in range(2)
+                ]  # System message meta data dicts
+            else:
+                sys_msg_meta_dicts = [
+                    dict(
+                        assistant_role=ai_assistant_role,
+                        user_role=ai_user_role,
+                        assistant_description=ai_assistant_description
+                        + "\n"
+                        + insights_for_subtask,
+                        user_description=ai_user_description + "\n" + "",
+                    )
+                    for _ in range(2)
+                ]  # System message meta data dicts
+
 
             if search_enabled:
                 function_list = [*MATH_FUNCS, *SEARCH_FUNCS]
@@ -210,7 +225,7 @@ def main(
             )
 
             # Start the role-playing to complete the subtask
-            chat_turn_limit, n = 4, 0
+            chat_turn_limit, n = 20, 0
             input_msg = role_play_session.init_chat()
             while n < chat_turn_limit:
                 n += 1
@@ -281,7 +296,7 @@ def main(
                 if (
                     "CAMEL_TASK_DONE" in user_response.msg.content
                     or "CAMEL_TASK_DONE" in assistant_response.msg.content
-                    or n == chat_turn_limit
+                    or n >= chat_turn_limit
                 ):
                     from prompts.post_finalization_prompts import (
                         ASSISTANT_PREPOST_RUN_PROMPT,
@@ -328,7 +343,7 @@ def main(
                 labels_key = tuple(insight["entity_recognition"])
                 environment_record[labels_key] = insight
 
-        with st.expander(f"# {subtask_id}:\n\nSummary"):
+        with st.expander(f"# 📝 {subtask_id}:\n\nSummary"):
             send_summary_to_ui(output_msg=output_msg)
     
     all_output_msgs = "\n".join(subtask_output_msgs)
@@ -437,7 +452,7 @@ def send_subtasks_to_ui(subtasks=[]):
 
 
 def send_summary_to_ui(output_msg=""):
-    st.write(output_msg.replace("\n", "\n\n") + "\n\n")
+    st.write(output_msg.replace("\n", "\n\n"))
 
     # Save the output message
     with open("downloads/CAMEL_multi_agent_summary.md", "a") as file:
@@ -448,10 +463,30 @@ def send_message_to_ui(role="", role_name="", message=""):
     if role not in ["user", "assistant"]:
         raise ValueError("The role should be one of 'user' or 'assistant'.")
 
+    message = message.replace('Next request.', '').replace('CAMEL_TASK_DONE', 'TASK_DONE').replace('None', '')
+    if role == "user":
+        matches = re.findall(
+            r"(Instruction|Input):[ \n]+(.+?)(?=\n[A-Z]|$)",
+            message,
+            re.DOTALL
+        )
+    else:
+        matches = re.findall(
+            r"(Thought|Action|Feedback):[ \n]+(.+?)(?=\n[A-Z]|$)",
+            message,
+            re.DOTALL
+        )
+    matched_messages = {
+        match[0].lower(): match[1].strip().replace('\n', '\n\n')
+        for match in matches
+    }
+    printed_message = ""
+    for key in matched_messages:
+        printed_message += f"{(matched_messages[key])}\n\n"
+
     with st.chat_message(role):
         st.markdown(
-            f"AI {role}: {role_name}\n\n"
-            f"{message.replace('Next request.', '').replace('CAMEL_TASK_DONE', 'TASK_DONE')}"
+            f"AI {role}: {role_name}\n\n{printed_message}"
         )
 
     # Save the messages
