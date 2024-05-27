@@ -40,7 +40,7 @@ class MultiAgent(ChatAgent):
         super().__init__(system_message, model_type, model_config)
         self.model_config = model_config or ChatGPTConfig()
 
-    def run_role_with_description(
+    def generate_role_with_description(
         self,
         task_prompt: Union[str, TextPrompt],
         num_roles: int = 2,

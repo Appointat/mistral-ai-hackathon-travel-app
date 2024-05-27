@@ -36,7 +36,7 @@ def main(
 
     # Generate role with descriptions
     role_names = None
-    role_descriptions_dict = multi_agent.run_role_with_description(
+    role_descriptions_dict = multi_agent.generate_role_with_description(
         task_prompt=task_prompt,
         num_roles=num_roles,
         role_names=role_names,
