@@ -104,9 +104,9 @@ with st.sidebar:
             )
         else:
             # Set default values for task prompt and context content
-            with open("examples/task_prompt_students_evaluation.txt", "r") as file:
+            with open("examples/task_prompt_dl_learning.txt", "r") as file:
                 task_prompt_business_novel = file.read()
-            with open("examples/context_content_students_evaluation.txt", "r") as file:
+            with open("examples/context_content_dl_learning.txt", "r") as file:
                 context_content_business_novel = file.read()
             task_prompt = st.text_area(
                 "Insert the task here", value=task_prompt_business_novel

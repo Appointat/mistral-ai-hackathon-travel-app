@@ -1,0 +1,2 @@
+you need to help a university student understand the difference between deep learning and traditional machine learning techniques.
+Provide examples of applications for both and discuss the computational resources typically required for deep learning.
