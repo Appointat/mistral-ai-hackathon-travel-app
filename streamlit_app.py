@@ -1,6 +1,7 @@
 import os
 
 import streamlit as st
+
 from camel.configs import ChatGPTConfig
 from camel.loaders.base_io import read_file
 from camel.models.openai_model import OpenAIModel
@@ -133,12 +134,20 @@ if task_prompt and context_text and submit_button:
 
     # Call the 'main' function with the task prompt and context content
     num_roles = 5  # num_roles could be null or a number
-    main(
-        task_prompt=task_prompt,
-        context_text=context_text,
-        num_roles=num_roles,
-        search_enabled=search_enabled,
-    )
+
+    # Assure that the thread is safely stopped
+    if 'stop_thread' not in st.session_state:
+        st.session_state['stop_thread'] = False
+
+    try:
+        main(
+            task_prompt=task_prompt,
+            context_text=context_text,
+            num_roles=num_roles,
+            search_enabled=search_enabled,
+        )
+    except KeyboardInterrupt:
+        st.session_state['stop_thread'] = True
 
     # Export the outputs of the form
     with open("downloads/CAMEL_multi_agent_output.md", "r") as file:
