@@ -133,6 +133,10 @@ if task_prompt and context_text and submit_button:
     with open("downloads/CAMEL_multi_agent_output.md", "w") as file:
         file.write("")
 
+    # Clean the human messages file
+    with open('apps/streamlit_ui/human_messages_tmp.txt', 'w') as file:
+        file.write("")
+
     # Call the 'main' function with the task prompt and context content
     num_roles = 5  # num_roles could be null or a number
 
