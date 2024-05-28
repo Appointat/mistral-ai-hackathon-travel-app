@@ -10,6 +10,7 @@ from camel.types import ModelType
 # Import functions and data related to the Streamlit user interface
 from apps.streamlit_ui.multi_agent_communication_ui import main
 
+
 # Set the title for the Streamlit app
 st.title("🪄 DeepThinker: integration of agents")
 
@@ -135,19 +136,12 @@ if task_prompt and context_text and submit_button:
     # Call the 'main' function with the task prompt and context content
     num_roles = 5  # num_roles could be null or a number
 
-    # Assure that the thread is safely stopped
-    if 'stop_thread' not in st.session_state:
-        st.session_state['stop_thread'] = False
-
-    try:
-        main(
-            task_prompt=task_prompt,
-            context_text=context_text,
-            num_roles=num_roles,
-            search_enabled=search_enabled,
-        )
-    except KeyboardInterrupt:
-        st.session_state['stop_thread'] = True
+    main(
+        task_prompt=task_prompt,
+        context_text=context_text,
+        num_roles=num_roles,
+        search_enabled=search_enabled,
+    )
 
     # Export the outputs of the form
     with open("downloads/CAMEL_multi_agent_output.md", "r") as file:

@@ -12,6 +12,8 @@ from camel.types import ModelType, TaskType
 from agents.insight_agent import InsightAgent
 from agents.multi_agent import MultiAgent
 from agents.report_agent import ReportAgent
+from apps.streamlit_ui.read_input_messages import read_input_messages
+
 
 def main(
     model_type=ModelType.MISTRAL_7B,
@@ -230,6 +232,19 @@ def main(
             while n < chat_turn_limit:
                 n += 1
                 try:
+                    try:
+                        # Read the human messages from the file
+                        read_input_messages()
+
+                        if 'human_messages' not in st.session_state:
+                            st.session_state['human_messages'] = []
+                        while not st.session_state['human_messages'].empty():
+                            input_msg = st.session_state['human_messages'].get()
+                            st.markdown(f"Human:\n{input_msg}")
+                            # TODO: Send the human message to the role-playing session
+                    except FileNotFoundError:
+                        pass
+
                     assistant_response, user_response = role_play_session.step(
                         input_msg
                     )
