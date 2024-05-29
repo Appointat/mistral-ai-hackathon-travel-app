@@ -6,8 +6,8 @@ HUMAN_AS_ASSISTANT_PROMPT = TextPrompt(
 Thought:
     {human_message}
 Action:
-    Can you instruct me to hlep with my thought?
+    I am not satisfied with your instruction. Can you instruct me to hlep with my thought?
 Feedback:
-    I need one instruction to help with my thought.
+    I need one instruction to help with my thought. Please give priority to this thought.
 """
 )
