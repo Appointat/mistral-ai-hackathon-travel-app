@@ -245,6 +245,7 @@ def main(
                         human_message += st.session_state['human_messages'].pop(0) + "\n\n"
 
                     if human_message != "":
+                        send_message_to_ui(role="user", role_name="Human", message=human_message)
                         from prompts.human_in_loop_prompts import HUMAN_AS_ASSISTANT_PROMPT
                         input_msg.content += HUMAN_AS_ASSISTANT_PROMPT.format(
                             human_message=human_message
