@@ -229,6 +229,7 @@ def main(
             # Start the role-playing to complete the subtask
             chat_turn_limit, n = 30, 0
             input_msg = role_play_session.init_chat()
+            role_play_firt_turn = True
             while n < chat_turn_limit:
                 n += 1
                 try:
@@ -241,19 +242,21 @@ def main(
                     if 'human_messages' not in st.session_state:
                         st.session_state['human_messages'] = queue.Queue()
                     human_message = ""
-                    while len(st.session_state['human_messages']) > 0:
-                        human_message += st.session_state['human_messages'].pop(0) + "\n\n"
+                    if not role_play_firt_turn:
+                        while len(st.session_state['human_messages']) > 0:
+                            human_message += st.session_state['human_messages'].pop(0) + "\n\n"
 
-                    if human_message != "":
-                        send_message_to_ui(role="user", role_name="Human", message=human_message)
-                        from prompts.human_in_loop_prompts import HUMAN_AS_ASSISTANT_PROMPT
-                        input_msg.content += HUMAN_AS_ASSISTANT_PROMPT.format(
-                            human_message=human_message
-                        )
+                        if human_message != "":
+                            send_message_to_ui(role="user", role_name="Human", message=human_message)
+                            from prompts.human_in_loop_prompts import HUMAN_AS_ASSISTANT_PROMPT
+                            input_msg.content += HUMAN_AS_ASSISTANT_PROMPT.format(
+                                human_message=human_message
+                            )
 
                     assistant_response, user_response = role_play_session.step(
                         input_msg
                     )
+                    role_play_firt_turn = False
                 except Exception as e:
                     # output a warning message and continue
                     st.warning(f"Warning: {e}")
@@ -484,26 +487,16 @@ def send_message_to_ui(role="", role_name="", message=""):
     if role not in ["user", "assistant"]:
         raise ValueError("The role should be one of 'user' or 'assistant'.")
 
-    message = message.replace('Next request.', '').replace('CAMEL_TASK_DONE', 'TASK_DONE').replace('None', '')
-    if role == "user":
-        matches = re.findall(
-            r"(Instruction|Input):[ \n]+(.+?)(?=\n[A-Z]|$)",
-            message,
-            re.DOTALL
-        )
-    else:
-        matches = re.findall(
-            r"(Thought|Action|Feedback):[ \n]+(.+?)(?=\n[A-Z]|$)",
-            message,
-            re.DOTALL
-        )
-    matched_messages = {
-        match[0].lower(): match[1].strip().replace('\n', '\n\n')
-        for match in matches
-    }
-    printed_message = ""
-    for key in matched_messages:
-        printed_message += f"{(matched_messages[key])}\n\n"
+    printed_message = message.replace('Next request.', '').replace('CAMEL_TASK_DONE', 'TASK_DONE').replace('None', '')
+    patterns = [
+        r"Thought:\s*",
+        r"Action:\s*",
+        r"Feedback:\s*",
+        r"Instruction:\s*",
+        r"Input:\s*"
+    ]
+    for pattern in patterns:
+        printed_message = re.sub(pattern, "", printed_message)
 
     with st.chat_message(role):
         st.markdown(
