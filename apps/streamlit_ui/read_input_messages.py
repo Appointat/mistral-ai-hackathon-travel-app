@@ -21,7 +21,7 @@ def read_input_messages():
 
         for human_message in new_messages:
             st.session_state['human_messages'].append(
-                json.loads(human_message)['message']
+                json.loads(human_message)['human_message']
             )
 
         # Clear the file

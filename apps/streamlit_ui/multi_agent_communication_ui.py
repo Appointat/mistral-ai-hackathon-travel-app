@@ -1,4 +1,4 @@
-import json, re
+import json, queue, re
 
 import streamlit as st
 from PIL import Image
@@ -235,15 +235,20 @@ def main(
                     try:
                         # Read the human messages from the file
                         read_input_messages()
-
-                        if 'human_messages' not in st.session_state:
-                            st.session_state['human_messages'] = []
-                        while not st.session_state['human_messages'].empty():
-                            input_msg = st.session_state['human_messages'].get()
-                            st.markdown(f"Human:\n{input_msg}")
-                            # TODO: Send the human message to the role-playing session
                     except FileNotFoundError:
                         pass
+
+                    if 'human_messages' not in st.session_state:
+                        st.session_state['human_messages'] = queue.Queue()
+                    human_message = ""
+                    while len(st.session_state['human_messages']) > 0:
+                        human_message += st.session_state['human_messages'].pop(0) + "\n\n"
+
+                    if human_message != "":
+                        from prompts.human_in_loop_prompts import HUMAN_AS_ASSISTANT_PROMPT
+                        input_msg.content += HUMAN_AS_ASSISTANT_PROMPT.format(
+                            human_message=human_message
+                        )
 
                     assistant_response, user_response = role_play_session.step(
                         input_msg
