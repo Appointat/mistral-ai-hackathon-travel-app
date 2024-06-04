@@ -1,6 +1,7 @@
-import json, re
+import json
+import re
 
-from colorama import Fore, Style, init
+from colorama import Fore, init
 from PIL import Image
 
 from camel.agents.deductive_reasoner_agent import DeductiveReasonerAgent
@@ -15,6 +16,8 @@ from agents.report_agent import ReportAgent
 
 # Initialize Colorama
 init(autoreset=True)
+
+
 def print_colored_message(message, color=Fore.WHITE):
     print(color + message)
 
@@ -51,7 +54,7 @@ def main(
     )
 
     # Split the original task into subtasks
-    num_subtasks=None
+    num_subtasks = None
     subtasks_with_dependencies_dict = multi_agent.split_tasks(
         task_prompt=task_prompt,
         role_descriptions_dict=role_descriptions_dict,
@@ -74,10 +77,11 @@ def main(
     print_colored_message("Displaying Workflow of Task Image.", Fore.CYAN)
 
     # Get the list of subtasks
-    subtasks = [
-        subtasks_with_dependencies_dict[key]["description"]
-        for key in sorted(subtasks_with_dependencies_dict.keys())
-    ]
+    # subtasks = [
+    #     subtasks_with_dependencies_dict[key]["description"]
+    #     for key in sorted(subtasks_with_dependencies_dict.keys())
+    # ]
+
     # Calculate the execution order of the subtasks, based on their
     # dependencies
     parallel_subtask_pipelines = multi_agent.get_task_execution_order(
@@ -220,20 +224,27 @@ def main(
         # Start the role-playing to complete the subtask
         chat_turn_limit, n = 30, 0
         input_msg = role_play_session.init_chat()
-        role_play_firt_turn = True
         while n < chat_turn_limit:
             n += 1
             try:
-                role_play_firt_turn = False
+                assistant_response, user_response = role_play_session.step(input_msg)
             except Exception as e:
                 print_colored_message(f"Warning: {e}", Fore.YELLOW)
                 continue
 
             if assistant_response.terminated:
-                print_colored_message(f"{ai_assistant_role} terminated. Reason: {assistant_response.info['termination_reasons']}.", Fore.RED)
+                print_colored_message(
+                    f"{ai_assistant_role} terminated. "
+                    f"Reason: {assistant_response.info['termination_reasons']}.",
+                    Fore.RED,
+                )
                 break
             if user_response.terminated:
-                print_colored_message(f"{ai_user_role} terminated. Reason: {user_response.info['termination_reasons']}.", Fore.RED)
+                print_colored_message(
+                    f"{ai_user_role} terminated. "
+                    f"Reason: {user_response.info['termination_reasons']}.",
+                    Fore.RED,
+                )
                 break
 
             input_msg = assistant_response.msg
@@ -246,19 +257,32 @@ def main(
                 + "\n"
             )
 
-            print_colored_message(f"--- [{n}] ---\n{assistant_response.msg.content.strip('Next request.').strip()}", Fore.BLUE)
-            print_colored_message(f"{user_response.msg.content.strip('Next request.').strip()}", Fore.MAGENTA)
+            print_colored_message(
+                f"{assistant_response.msg.content.strip('Next request.').strip()}",
+                Fore.MAGENTA,
+            )
+            print_colored_message(
+                f"{user_response.msg.content.strip('Next request.').strip()}",
+                Fore.MAGENTA,
+            )
 
             assistant_response.msg.content += (
-                "\n\n" + "To avoid repetitive conversations, " +
-                "please make your next instruction different " +
-                "from the previous one."
+                "\n\n"
+                + "To avoid repetitive conversations, "
+                + "please make your next instruction different "
+                + "from the previous one."
             )
-            if ("CAMEL_TASK_DONE" in user_response.msg.content or "CAMEL_TASK_DONE" in assistant_response.msg.content or n >= chat_turn_limit):
+            if (
+                "CAMEL_TASK_DONE" in user_response.msg.content
+                or "CAMEL_TASK_DONE" in assistant_response.msg.content
+                or n >= chat_turn_limit
+            ):
                 break
 
         insights_instruction = (
-            "The CONTEXT TEXT is the steps to resolve the TASK. The INSIGHTs should come solely from the assistant's solutions and actions."
+            "The CONTEXT TEXT is the steps to resolve "
+            + "the TASK. The INSIGHTs should come solely"
+            + "from the assistant's solutions and actions."
         )
         insights = insight_agent.run(
             context_text=assistant_msg_record,
@@ -272,6 +296,7 @@ def main(
             environment_record[labels_key] = insight
 
         print_colored_message(output_msg, Fore.YELLOW)
+
 
 def get_insights_from_environment(
     subtask_id,
@@ -320,22 +345,27 @@ def get_insights_from_environment(
 
     return insights_for_subtask
 
+
 def print_agent_message(role="", role_name="", message=""):
     if role not in ["user", "assistant"]:
         raise ValueError("The role should be one of 'user' or 'assistant'.")
 
-    printed_message = message.replace('Next request.', '').replace('CAMEL_TASK_DONE', 'TASK_DONE').replace('None', '')
+    printed_message = (
+        message.replace("Next request.", "")
+        .replace("CAMEL_TASK_DONE", "TASK_DONE")
+        .replace("None", "")
+    )
     patterns = [
         r"Thought:\s*",
         r"Action:\s*",
         r"Feedback:\s*",
         r"Instruction:\s*",
-        r"Input:\s*"
+        r"Input:\s*",
     ]
     for pattern in patterns:
         printed_message = re.sub(pattern, "", printed_message)
-    
-    print_colored_message(
-        f"{role_name} says: {printed_message}", Fore.CYAN
-        if role == "user" else Fore.GREEN)
 
+    print_colored_message(
+        f"{role_name} says: {printed_message}",
+        Fore.CYAN if role == "user" else Fore.GREEN,
+    )
