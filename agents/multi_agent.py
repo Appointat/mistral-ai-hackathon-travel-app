@@ -4,14 +4,13 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import matplotlib.pyplot as plt
 import networkx as nx
-from tenacity import retry, stop_after_attempt, wait_fixed
-
 from camel.agents import ChatAgent
 from camel.configs import ChatGPTConfig
 from camel.functions import OpenAIFunction
 from camel.messages import BaseMessage
 from camel.prompts import TextPrompt
 from camel.types import ModelType, RoleType
+from tenacity import retry, stop_after_attempt, wait_fixed
 
 from agents.insight_agent import InsightAgent
 from utils.structure_output import extract_json_from_string
@@ -94,11 +93,11 @@ class MultiAgent(ChatAgent):
             expert_json_prompt = (
                 "===== ANSWER TEMPLATE (JSON) =====\n{\n"
                 + ", \n".join(
-                    f"    \"Domain expert {i + 1}\": {{\n"
-                    f"        \"Role name\": \"{role_name}"
-                    "\",\n        \"Associated competencies, "
-                    "characteristics, and duties\": "
-                    "\"<BLANK>\"\n    }"
+                    f'    "Domain expert {i + 1}": {{\n'
+                    f'        "Role name": "{role_name}'
+                    '",\n        "Associated competencies, '
+                    'characteristics, and duties": '
+                    '"<BLANK>"\n    }'
                     for i, role_name in enumerate(role_names)
                 )
                 + "\n}"
@@ -117,10 +116,10 @@ The tool descriptions are the context information of the potential competencies 
 """
             for i, function in enumerate(function_list):
                 description_lines = function.get_function_description().split(
-                    '\n'
+                    "\n"
                 )
-                indented_description = '\n'.join(
-                    '\t' + line for line in description_lines
+                indented_description = "\n".join(
+                    "\t" + line for line in description_lines
                 )
                 function_docstring += (
                     f"{i + 1}. Ability or tool of "
@@ -179,7 +178,7 @@ The tool descriptions are the context information of the potential competencies 
         for _, expert_data in json_dict.items():
             role_name = expert_data["Role name"]
             description = expert_data[
-                "Associated competencies," + " characteristics, and duties"
+                "Associated competencies, characteristics, and duties"
             ]
             role_descriptions_dict[role_name] = description
 
@@ -219,7 +218,7 @@ The tool descriptions are the context information of the potential competencies 
         self.reset()
 
         split_task_rules_prompt = """You are a task decomposer, and you're in asked to break down the main TASK into {num_subtasks} subtasks suitable for a team comprising {num_roles} domain experts. The experts will contribute to the {num_subtasks} subtasks. Please follow the guidelines below to craft your answer:
-    1. Remember, your role is to compose the TASK, not to complete the TASK directly.
+    1. Remember, your role is to decompose the TASK, not to complete the TASK directly.
     2. Focus on LLM Capabilities: Each subtask should leverage the strengths of a large language model (LLM), such as data processing, writing code, content generation, and etc.. Avoid assigning tasks that require physical actions or direct interaction with software/hardware systems, which are outside the LLM's capabilities.
     3. Define clear LLM-Appropriate Actions: Ensure each subtask is actionable, distinct, tapping into the expertise of the assigned roles and aligning with LLM capabilities. The subtasks should be designed considering that the LLM can handle complex tasks typically managed by domain experts. Recognize that not every subtask needs to directly reflect the main TASK's ultimate aim. Some subtasks serve as essential building blocks, paving the way for more central subtasks, but avoid creating subtasks that are self-dependent or overly foundational.
     4. Balanced Granularity with a Bias for Action: Details of subtask should be detailed, actionable, and not be ambiguous, in addition, make sure that the subtasks should not extend beyond the original scope or boundaries of the TASK. Prioritize tangible actions in subtask such as implementation, creation, testing, or other tangible activities over mere understanding.
@@ -427,7 +426,7 @@ Your answer MUST strictly adhere to the structure of ANSWER TEMPLATE, ONLY fill 
             assert (
                 "dependencies" in details
             ), f"{subtask_idx} does not have a 'dependencies' key: {details}"
-            deps = details['dependencies']
+            deps = details["dependencies"]
             oriented_graph[subtask_idx] = deps
 
         subtasks_execution_pipelines = self.sort_oriented_graph(oriented_graph)
@@ -533,12 +532,12 @@ Your answer MUST strictly adhere to the structure of ANSWER TEMPLATE, ONLY fill 
             pos,
             with_labels=True,
             node_size=2000,
-            node_color='skyblue',
+            node_color="skyblue",
             alpha=0.5,
             font_size=15,
             width=2,
-            edge_color='gray',
-            font_weight='bold',
+            edge_color="gray",
+            font_weight="bold",
         )
 
         # Save the figure locally
@@ -641,13 +640,13 @@ Definition of ASSISTANT: The assistant is the role that executes instructions gi
 
         # Distribute the output completions into scores
         user_compatibility_scores = [
-            desc.replace("<", "").replace(">", "").strip('\n')
+            desc.replace("<", "").replace(">", "").strip("\n")
             for desc in re.findall(
                 r"Score of role .+? as USER: (.+?)(?=\n|$)", msg.content
             )
         ]
         assistant_compatibility_scores = [
-            desc.replace("<", "").replace(">", "").strip('\n')
+            desc.replace("<", "").replace(">", "").strip("\n")
             for desc in re.findall(
                 r"Score of role .+? as ASSISTANT: (.+?)(?=\n|$)", msg.content
             )
@@ -733,8 +732,8 @@ Please ensure that you consider both explicit and implicit similarities while ev
         answer_prompt = "===== ANSWER TEMPLATE =====\n"
         for lable in target_labels:
             answer_prompt += (
-                f"Label \"{lable}\" from TARGET LABELS has "
-                "an explicit or implicit similarity with \"<BLANK>/NONE\" "
+                f'Label "{lable}" from TARGET LABELS has '
+                'an explicit or implicit similarity with "<BLANK>/NONE" '
                 "(or similar label) in LABELS SETS subsets [<m>, <n>] "
                 "(must include square brackets even if it is none).\n"
             )
