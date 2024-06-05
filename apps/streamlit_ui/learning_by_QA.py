@@ -1,15 +1,13 @@
 import json
 import re
 
-from colorama import Fore, init
-from PIL import Image
-from imgcat import imgcat
-
 from camel.agents.deductive_reasoner_agent import DeductiveReasonerAgent
 from camel.configs import ChatGPTConfig, FunctionCallingConfig
 from camel.functions import MATH_FUNCS, SEARCH_FUNCS
 from camel.societies import RolePlaying
 from camel.types import ModelType, TaskType
+from colorama import Fore, init
+from imgcat import imgcat
 
 from agents.insight_agent import InsightAgent
 from agents.multi_agent import MultiAgent
@@ -45,11 +43,15 @@ Start a test for a student to learn the Deep Learning concepts.
         model_type=model_type_json,
         model_config=model_config,
     )
-    insight_agent = InsightAgent(model_type=model_type_json, model_config=model_config)
+    insight_agent = InsightAgent(
+        model_type=model_type_json, model_config=model_config
+    )
     deductive_reasoner_agent = DeductiveReasonerAgent(
         model_type=model_type_json, model_config=model_config
     )
-    report_agent = ReportAgent(model_type=model_type_json, model_config=model_config)
+    report_agent = ReportAgent(
+        model_type=model_type_json, model_config=model_config
+    )
 
     # Generate role with descriptions
     role_names = None
@@ -116,11 +118,15 @@ Start a test for a student to learn the Deep Learning concepts.
     # Resolve the subtasks in sequence of the pipelines
     subtask_output_msgs = []
     for subtask_id in (
-        subtask for pipeline in parallel_subtask_pipelines for subtask in pipeline
+        subtask
+        for pipeline in parallel_subtask_pipelines
+        for subtask in pipeline
     ):
         # Get the description of the subtask
         subtask = subtasks_with_dependencies_dict[subtask_id]["description"]
-        subtask_labels = subtasks_with_dependencies_dict[subtask_id]["input_tags"]
+        subtask_labels = subtasks_with_dependencies_dict[subtask_id][
+            "input_tags"
+        ]
         # Get the insights from the environment for the subtask
         insights_for_subtask = get_insights_from_environment(
             subtask_id,
@@ -134,14 +140,18 @@ Start a test for a student to learn the Deep Learning concepts.
         )
 
         # Get the role with the highest compatibility score
-        role_compatibility_scores_dict = multi_agent.evaluate_role_compatibility(
-            subtask, role_descriptions_dict
+        role_compatibility_scores_dict = (
+            multi_agent.evaluate_role_compatibility(
+                subtask, role_descriptions_dict
+            )
         )
 
         # Get the top two roles with the highest compatibility scores
         ai_assistant_role = max(
             role_compatibility_scores_dict,
-            key=lambda role: role_compatibility_scores_dict[role]["score_assistant"],
+            key=lambda role: role_compatibility_scores_dict[role][
+                "score_assistant"
+            ],
         )
         ai_user_role = max(
             role_compatibility_scores_dict,
@@ -243,7 +253,9 @@ Start a test for a student to learn the Deep Learning concepts.
         while n < chat_turn_limit:
             n += 1
             try:
-                assistant_response, user_response = role_play_session.step(input_msg)
+                assistant_response, user_response = role_play_session.step(
+                    input_msg
+                )
             except Exception as e:
                 print_colored_message(f"Warning: {e}", Fore.YELLOW)
                 continue
@@ -267,9 +279,9 @@ Start a test for a student to learn the Deep Learning concepts.
 
             assistant_msg_record += (
                 f"--- [{n}] ---\n"
-                + assistant_response.msg.content.replace("Next request.", "").strip(
-                    "\n"
-                )
+                + assistant_response.msg.content.replace(
+                    "Next request.", ""
+                ).strip("\n")
                 + "\n"
             )
 
@@ -343,13 +355,16 @@ def get_insights_from_environment(
 
     labels_sets = [list(labels_set) for labels_set in environment_record.keys()]
 
-    _, _, _, labels_retrieved_sets = multi_agent.get_retrieval_index_from_environment(
-        labels_sets=labels_sets, target_labels=target_labels
+    _, _, _, labels_retrieved_sets = (
+        multi_agent.get_retrieval_index_from_environment(
+            labels_sets=labels_sets, target_labels=target_labels
+        )
     )
 
     # Retrive the necessaray insights from the environment
     retrieved_insights = [
-        environment_record[tuple(label_set)] for label_set in labels_retrieved_sets
+        environment_record[tuple(label_set)]
+        for label_set in labels_retrieved_sets
     ]
 
     insights_none_pre_subtask = insight_agent.run(context_text=context_text)
