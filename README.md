@@ -28,3 +28,8 @@
     ```shell
     streamlit run streamlit_app.py
     ```
+
+6. run learning_by_QA
+    ```bash 
+    python app.py | tee -a output-20240408-01.log
+    ```
