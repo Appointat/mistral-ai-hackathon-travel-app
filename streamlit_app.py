@@ -1,15 +1,14 @@
 import os
 
 import streamlit as st
-
 from camel.configs import ChatGPTConfig
 from camel.loaders.base_io import read_file
 from camel.models.openai_model import OpenAIModel
 from camel.types import ModelType
 
 # Import functions and data related to the Streamlit user interface
+# from apps.streamlit_ui.multi_agent_communication_ui import main
 from apps.streamlit_ui.multi_agent_communication_ui import main
-
 
 # Set the title for the Streamlit app
 st.title("🪄 DeepThinker: integration of agents")
@@ -32,7 +31,6 @@ with st.sidebar:
         if search_enabled:
             google_api_key = os.environ["GOOGLE_API_KEY"]
             search_engine_id = os.environ["SEARCH_ENGINE_ID"]
-
 
         # File uploader for users to upload a document
         uploaded_file = st.file_uploader(
@@ -68,9 +66,9 @@ with st.sidebar:
             ]
 
             # Get a response for the task prompt
-            response_task_prompt = my_openai_model.run(messages=messages_task_prompt)[
-                "choices"
-            ][0]
+            response_task_prompt = my_openai_model.run(
+                messages=messages_task_prompt
+            )["choices"][0]
             content_task_prompt = response_task_prompt["message"]["content"]
 
             # Create a context content based on the uploaded content
@@ -94,11 +92,14 @@ with st.sidebar:
             response_context_content = my_openai_model.run(
                 messages=messages_context_content
             )["choices"][0]
-            content_context_content = response_context_content["message"]["content"]
+            content_context_content = response_context_content["message"][
+                "content"
+            ]
 
             # Set task prompt and context content as inputs in the form
             task_prompt = st.text_area(
-                "Your task prompt extracted from the file", value=content_task_prompt
+                "Your task prompt extracted from the file",
+                value=content_task_prompt,
             )
             context_content = st.text_area(
                 "Your context content extracted from the file",
@@ -106,9 +107,11 @@ with st.sidebar:
             )
         else:
             # Set default values for task prompt and context content
-            with open("examples/task_prompt_dl_learning.txt", "r") as file:
+            with open("examples/task_prompt_fine_tune_design.txt", "r") as file:
                 task_prompt_business_novel = file.read()
-            with open("examples/context_content_dl_learning.txt", "r") as file:
+            with open(
+                "examples/context_content_fine_tune_design.txt", "r"
+            ) as file:
                 context_content_business_novel = file.read()
             task_prompt = st.text_area(
                 "Insert the task here", value=task_prompt_business_novel
@@ -116,6 +119,16 @@ with st.sidebar:
             context_text = st.text_area(
                 "Insert the context here", value=context_content_business_novel
             )
+        num_subtasks = st.number_input(
+            "Number of subtasks", min_value=0, max_value=10, value=5
+        )
+        response_language = st.selectbox(
+            "Select the response language",
+            options=["English", "Chinese", "French", "German", "Italian"],
+            index=0,
+        )
+        if num_subtasks == 0:
+            num_subtasks = None
 
         # Create a submit button in the form
         submit_button = st.form_submit_button(label="Submit")
@@ -134,7 +147,7 @@ if task_prompt and context_text and submit_button:
         file.write("")
 
     # Clean the human messages file
-    with open('apps/streamlit_ui/human_messages_tmp.txt', 'w') as file:
+    with open("apps/streamlit_ui/human_messages_tmp.txt", "w") as file:
         file.write("")
 
     # Call the 'main' function with the task prompt and context content
@@ -144,7 +157,9 @@ if task_prompt and context_text and submit_button:
         task_prompt=task_prompt,
         context_text=context_text,
         num_roles=num_roles,
+        num_subtasks=num_subtasks,
         search_enabled=search_enabled,
+        output_language=response_language,
     )
 
     # Export the outputs of the form
