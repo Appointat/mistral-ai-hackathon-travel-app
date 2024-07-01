@@ -35,7 +35,7 @@ def learning_by_QA(
     # """
     #     task_prompt = """
     # Suppose there is a criteria of the assessment that evaluates students' learning outcomes. It can assess based on the student's latest responses, building upon existing achievements. For example, if a student answers a question correctly about knowledge A&B, it indicates that their mastery of A and B (possibly represented as a complex vector) has **improved**, which should be noted down. Conversely, if they answer incorrectly, their mastery has declined.
-    # Therefore, the TASK is to create a set of detailed evaluation criteria to promote education in Deep Learning, by the similar method in the provied example.
+    # Therefore, the TASK is to create a set of detailed evaluation criteria to promote education in Deep Learning, by the similar method in the provided example.
     # """
     task_prompt = """
 Compose a very challenging system design problem for deep learning, and then solve this difficult issue step by step.
