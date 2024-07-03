@@ -4,6 +4,7 @@ from camel.agents import ChatAgent
 from camel.messages import BaseMessage
 from camel.prompts import TextPrompt
 from camel.types import ModelType, RoleType
+
 from utils.structure_output import extract_json_from_string
 
 
@@ -51,8 +52,8 @@ class InsightAgent(ChatAgent):
         insights_instruction_prompt = TextPrompt(
             "Based on the CONTEXT TEXT "
             + "provided, generate a comprehensive set of distinct "
-            + "insights following the \"RULES OF INSIGHTS "
-            + "GENERATION\" and use the \"ANSWER TEMPLATE\" to "
+            + 'insights following the "RULES OF INSIGHTS '
+            + 'GENERATION" and use the "ANSWER TEMPLATE" to '
             + "structure your response. Extract as many meaningful "
             + "insights as the context allows. "
             + "{insights_instruction}\nYour answer MUST strictly "
