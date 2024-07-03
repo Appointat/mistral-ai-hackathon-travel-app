@@ -4,7 +4,6 @@ from camel.agents import ChatAgent
 from camel.messages import BaseMessage
 from camel.prompts import TextPrompt
 from camel.types import ModelType, RoleType
-from utils.structure_output import extract_json_from_string
 
 
 class ReportAgent(ChatAgent):
@@ -32,7 +31,7 @@ class ReportAgent(ChatAgent):
     def run(
         self,
         context_text: Union[str, TextPrompt],
-        task_prompt: Union[str, TextPrompt]
+        task_prompt: Union[str, TextPrompt],
     ) -> Dict[str, Dict[str, Any]]:
         r"""Generate role names based on the input task prompt.
 
@@ -51,7 +50,7 @@ class ReportAgent(ChatAgent):
             "Based on the CONTEXT TEXT "
             + "provided, generate a comprehensive and detailed report that "
             + "can complete the TASK (Visual tables (MARKDOWN format) or lists (MARKDOWN format) are strongly recommended to enhance the clarity of the solution) "
-            + "and use the \"ANSWER TEMPLATE\" to "
+            + 'and use the "ANSWER TEMPLATE" to '
             + "structure your response.\nYour answer MUST strictly "
             + "adhere to the structure of ANSWER TEMPLATE, ONLY "
             + "fill in  the BLANKs, and DO NOT alter or modify any "
@@ -62,8 +61,7 @@ class ReportAgent(ChatAgent):
         )
         task_prompt = TextPrompt("===== TASK =====\n{task_prompt}\n\n")
         answer_template_prompt = (
-            "===== ANSWER TEMPLATE =====\n"
-            "<BLANK_IN_MARKDOWN>"
+            "===== ANSWER TEMPLATE =====\n" "<BLANK_IN_MARKDOWN>"
         )
         insights_generation_prompt = (
             report_instruction_prompt + context_text_prompt

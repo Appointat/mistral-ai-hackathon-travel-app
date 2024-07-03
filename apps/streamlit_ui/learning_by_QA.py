@@ -19,7 +19,7 @@ init(autoreset=True)
 
 def print_colored_message(message, color=Fore.WHITE):
     print(color + message)
-    print(Fore.RESET)
+    print(Fore.WHITE)
 
 
 def learning_by_QA(
@@ -30,27 +30,34 @@ def learning_by_QA(
     search_enabled=False,
     output_language="en",
 ) -> None:
+    # task_prompt = """
+    # Doing continually the QA role-playing between the student and the tutor to learn the Deep Learning concepts. The user will guide the student through the test, provide explanations, and evaluate the student's performance. The test consists of multiple-choice questions and practical exercises.
+    # """
+    #     task_prompt = """
+    # Suppose there is a criteria of the assessment that evaluates students' learning outcomes. It can assess based on the student's latest responses, building upon existing achievements. For example, if a student answers a question correctly about knowledge A&B, it indicates that their mastery of A and B (possibly represented as a complex vector) has **improved**, which should be noted down. Conversely, if they answer incorrectly, their mastery has declined.
+    # Therefore, the TASK is to create a set of detailed evaluation criteria to promote education in Deep Learning, by the similar method in the provided example.
+    # """
     task_prompt = """
-Start a test for a student to learn the Deep Learning concepts.
+Compose a very challenging system design problem for deep learning, and then solve this difficult issue step by step.
 """
 
     # Model and agent initialization
     model_type = ModelType.GPT_4O
     model_type_json = ModelType.GPT_4O
-    model_config = ChatGPTConfig(max_tokens=4096, temperature=0)
+    model_config_json = ChatGPTConfig(max_tokens=4096, temperature=0.7)
 
     multi_agent = MultiAgent(
         model_type=model_type_json,
-        model_config=model_config,
+        model_config=model_config_json,
     )
     insight_agent = InsightAgent(
-        model_type=model_type_json, model_config=model_config
+        model_type=model_type_json, model_config=model_config_json
     )
     deductive_reasoner_agent = DeductiveReasonerAgent(
-        model_type=model_type_json, model_config=model_config
+        model_type=model_type_json, model_config=model_config_json
     )
     report_agent = ReportAgent(
-        model_type=model_type_json, model_config=model_config
+        model_type=model_type_json, model_config=model_config_json
     )
 
     # Generate role with descriptions
@@ -159,7 +166,15 @@ Start a test for a student to learn the Deep Learning concepts.
         )
 
         ai_assistant_description = role_descriptions_dict[ai_assistant_role]
-        ai_user_description = role_descriptions_dict[ai_user_role]
+        from agents.roles_profile.tutor import (
+            ROLE_PROFILE_FOR_EVALUATION_CRITERIA,
+        )
+
+        ai_user_description = (
+            role_descriptions_dict[ai_user_role]
+            + "Your next instruction and your next question asked by you should based on the result of the criteria evaluation.\n"
+            + ROLE_PROFILE_FOR_EVALUATION_CRITERIA.format()
+        )
 
         output_msg = ""
         print_colored_message(f"🌲 {subtask_id}: {subtask}", Fore.GREEN)
@@ -207,12 +222,24 @@ Start a test for a student to learn the Deep Learning concepts.
 
         assistant_config = FunctionCallingConfig.from_openai_function_list(
             function_list=function_list,
-            kwargs=dict(temperature=0.7),
+            kwargs=dict(
+                max_tokens=4096,
+                temperature=1,
+                n=3,
+                presence_penalty=1.0,
+                frequency_penalty=1.0,
+            ),
         )
 
         user_config = FunctionCallingConfig.from_openai_function_list(
             function_list=function_list,
-            kwargs=dict(temperature=0.7),
+            kwargs=dict(
+                max_tokens=4096,
+                temperature=1,
+                n=2,
+                presence_penalty=1.0,
+                frequency_penalty=1.0,
+            ),
         )
 
         assistant_agent_kwargs = dict(
@@ -233,9 +260,11 @@ Start a test for a student to learn the Deep Learning concepts.
             assistant_agent_kwargs=assistant_agent_kwargs,
             user_role_name=ai_user_role,
             user_agent_kwargs=user_agent_kwargs,
+            critic_role_name="Human",
             task_type=TaskType.ROLE_DESCRIPTION,
             task_prompt=subtask_content,
             with_task_specify=False,
+            with_critic_in_the_loop=True,
             extend_sys_msg_meta_dicts=sys_msg_meta_dicts,
             output_language=output_language,
         )

@@ -7,7 +7,7 @@ with open("examples/context_content_dl_learning.txt", "r") as file:
     context_text = file.read()
 num_roles = 5  # num_roles could be null or a number
 search_enabled = False
-output_language = "zh"  # English is recommended for better performance
+output_language = "Chinese"  # English is recommended for better performance
 
 learning_by_QA(
     task_prompt=task_prompt,

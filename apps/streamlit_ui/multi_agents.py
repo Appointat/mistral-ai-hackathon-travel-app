@@ -33,7 +33,7 @@ def main(
     # Model and agent initialization
     model_type = ModelType.GPT_4O
     model_type_json = ModelType.GPT_4O
-    model_config = ChatGPTConfig(max_tokens=4096, temperature=0)
+    model_config = ChatGPTConfig(max_tokens=4096, temperature=0.7)
 
     multi_agent = MultiAgent(
         model_type=model_type_json,
@@ -199,12 +199,12 @@ def main(
 
         assistant_config = FunctionCallingConfig.from_openai_function_list(
             function_list=function_list,
-            kwargs=dict(temperature=0.7),
+            kwargs=dict(max_tokens=4096, temperature=0.7),
         )
 
         user_config = FunctionCallingConfig.from_openai_function_list(
             function_list=function_list,
-            kwargs=dict(temperature=0.7),
+            kwargs=dict(max_tokens=4096, temperature=0.7),
         )
 
         assistant_agent_kwargs = dict(

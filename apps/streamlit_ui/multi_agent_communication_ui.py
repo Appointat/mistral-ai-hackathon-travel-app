@@ -1,13 +1,14 @@
-import json, queue, re
+import json
+import queue
+import re
 
 import streamlit as st
-from PIL import Image
-
 from camel.agents.deductive_reasoner_agent import DeductiveReasonerAgent
 from camel.configs import ChatGPTConfig, FunctionCallingConfig
 from camel.functions import MATH_FUNCS, SEARCH_FUNCS
 from camel.societies import RolePlaying
 from camel.types import ModelType, TaskType
+from PIL import Image
 
 from agents.insight_agent import InsightAgent
 from agents.multi_agent import MultiAgent
@@ -20,22 +21,28 @@ def main(
     task_prompt=None,
     context_text=None,
     num_roles=None,
+    num_subtasks=None,
     search_enabled=False,
+    output_language="en",
 ) -> None:
     # Model and agent initialization
     model_type = ModelType.GPT_4O
-    model_type_json = ModelType.GPT_4O
+    model_type_json = ModelType.GROQ_LLAMA3_70_B
     model_config = ChatGPTConfig(max_tokens=4096, temperature=0)
 
     multi_agent = MultiAgent(
         model_type=model_type_json,
         model_config=model_config,
     )
-    insight_agent = InsightAgent(model_type=model_type_json, model_config=model_config)
+    insight_agent = InsightAgent(
+        model_type=model_type_json, model_config=model_config
+    )
     deductive_reasoner_agent = DeductiveReasonerAgent(
         model_type=model_type_json, model_config=model_config
     )
-    report_agent = ReportAgent(model_type=model_type_json, model_config=model_config)
+    report_agent = ReportAgent(
+        model_type=model_type_json, model_config=model_config
+    )
 
     # Generate role with descriptions
     role_names = None
@@ -47,7 +54,6 @@ def main(
     )
 
     # Split the original task into subtasks
-    num_subtasks=None
     subtasks_with_dependencies_dict = multi_agent.split_tasks(
         task_prompt=task_prompt,
         role_descriptions_dict=role_descriptions_dict,
@@ -67,8 +73,7 @@ def main(
     )
     subtasks_image = Image.open(subtasks_image_path)
     st.image(
-        subtasks_image, caption='Workflows of Task.',
-        use_column_width=True
+        subtasks_image, caption="Workflows of Task.", use_column_width=True
     )
 
     # Get the list of subtasks
@@ -97,11 +102,15 @@ def main(
     # Resolve the subtasks in sequence of the pipelines
     subtask_output_msgs = []
     for subtask_id in (
-        subtask for pipeline in parallel_subtask_pipelines for subtask in pipeline
+        subtask
+        for pipeline in parallel_subtask_pipelines
+        for subtask in pipeline
     ):
         # Get the description of the subtask
         subtask = subtasks_with_dependencies_dict[subtask_id]["description"]
-        subtask_labels = subtasks_with_dependencies_dict[subtask_id]["input_tags"]
+        subtask_labels = subtasks_with_dependencies_dict[subtask_id][
+            "input_tags"
+        ]
         # Get the insights from the environment for the subtask
         insights_for_subtask = get_insights_from_environment(
             subtask_id,
@@ -115,14 +124,18 @@ def main(
         )
 
         # Get the role with the highest compatibility score
-        role_compatibility_scores_dict = multi_agent.evaluate_role_compatibility(
-            subtask, role_descriptions_dict
+        role_compatibility_scores_dict = (
+            multi_agent.evaluate_role_compatibility(
+                subtask, role_descriptions_dict
+            )
         )
 
         # Get the top two roles with the highest compatibility scores
         ai_assistant_role = max(
             role_compatibility_scores_dict,
-            key=lambda role: role_compatibility_scores_dict[role]["score_assistant"],
+            key=lambda role: role_compatibility_scores_dict[role][
+                "score_assistant"
+            ],
         )
         ai_user_role = max(
             role_compatibility_scores_dict,
@@ -177,7 +190,6 @@ def main(
                     for _ in range(2)
                 ]  # System message meta data dicts
 
-
             if search_enabled:
                 function_list = [*MATH_FUNCS, *SEARCH_FUNCS]
             else:
@@ -186,13 +198,13 @@ def main(
             # Assistant model config
             assistant_config = FunctionCallingConfig.from_openai_function_list(
                 function_list=function_list,
-                kwargs=dict(temperature=0.7),
+                kwargs=dict(max_tokens=4096, temperature=0.7),
             )
 
             # User model config
             user_config = FunctionCallingConfig.from_openai_function_list(
                 function_list=function_list,
-                kwargs=dict(temperature=0.7),
+                kwargs=dict(max_tokens=4096, temperature=0.7),
             )
 
             assistant_agent_kwargs = dict(
@@ -217,6 +229,7 @@ def main(
                 task_prompt=subtask_content,
                 with_task_specify=False,
                 extend_sys_msg_meta_dicts=sys_msg_meta_dicts,
+                output_language=output_language,
             )
 
             assistant_msg_record = (
@@ -239,18 +252,30 @@ def main(
                     except FileNotFoundError:
                         pass
 
-                    if 'human_messages' not in st.session_state:
-                        st.session_state['human_messages'] = queue.Queue()
+                    if "human_messages" not in st.session_state:
+                        st.session_state["human_messages"] = queue.Queue()
                     human_message = ""
                     if not role_play_firt_turn:
-                        while len(st.session_state['human_messages']) > 0:
-                            human_message += st.session_state['human_messages'].pop(0) + "\n\n"
+                        while len(st.session_state["human_messages"]) > 0:
+                            human_message += (
+                                st.session_state["human_messages"].pop(0)
+                                + "\n\n"
+                            )
 
                         if human_message != "":
-                            send_message_to_ui(role="user", role_name="Human", message=human_message)
-                            from prompts.human_in_loop_prompts import HUMAN_AS_ASSISTANT_PROMPT
-                            input_msg.content += HUMAN_AS_ASSISTANT_PROMPT.format(
-                                human_message=human_message
+                            send_message_to_ui(
+                                role="user",
+                                role_name="Human",
+                                message=human_message,
+                            )
+                            from prompts.human_in_loop_prompts import (
+                                HUMAN_AS_ASSISTANT_PROMPT,
+                            )
+
+                            input_msg.content += (
+                                HUMAN_AS_ASSISTANT_PROMPT.format(
+                                    human_message=human_message
+                                )
                             )
 
                     assistant_response, user_response = role_play_session.step(
@@ -279,9 +304,9 @@ def main(
 
                 assistant_msg_record += (
                     f"--- [{n}] ---\n"
-                    + assistant_response.msg.content.replace("Next request.", "").strip(
-                        "\n"
-                    )
+                    + assistant_response.msg.content.replace(
+                        "Next request.", ""
+                    ).strip("\n")
                     + "\n"
                 )
 
@@ -298,9 +323,10 @@ def main(
 
                 # Avoid the repetition
                 assistant_response.msg.content += (
-                    "\n\n" + "To avoid repetitive conversations, " +
-                    "please make your next instruction different " +
-                    "from the previous one."
+                    "\n\n"
+                    + "To avoid repetitive conversations, "
+                    + "please make your next instruction different "
+                    + "from the previous one."
                 )
 
                 # reproduced_assistant_msg_with_category = (
@@ -322,20 +348,20 @@ def main(
                     or "CAMEL_TASK_DONE" in assistant_response.msg.content
                     or n >= chat_turn_limit
                 ):
-                    from prompts.post_finalization_prompts import (
-                        ASSISTANT_PREPOST_RUN_PROMPT,
-                        ASSISTANT_FINALIZATION_PROMPT,
-                    )
-                    assistant_response.msg.content += ASSISTANT_PREPOST_RUN_PROMPT
-                    _input_msg = assistant_response.msg
-                    assistant_response, user_response = role_play_session.step(_input_msg)
-                    for _ in range(2):
-                        assistant_response.msg.content += str(ASSISTANT_FINALIZATION_PROMPT)
-                        _input_msg = assistant_response.msg
-                        assistant_response, user_response = role_play_session.step(_input_msg)
+                    # from prompts.post_finalization_prompts import (
+                    #     ASSISTANT_PREPOST_RUN_PROMPT,
+                    #     ASSISTANT_FINALIZATION_PROMPT,
+                    # )
+                    # assistant_response.msg.content += ASSISTANT_PREPOST_RUN_PROMPT
+                    # _input_msg = assistant_response.msg
+                    # assistant_response, user_response = role_play_session.step(_input_msg)
+                    # for _ in range(2):
+                    #     assistant_response.msg.content += str(ASSISTANT_FINALIZATION_PROMPT)
+                    #     _input_msg = assistant_response.msg
+                    #     assistant_response, user_response = role_play_session.step(_input_msg)
 
-                    output_msg = assistant_response.msg.content.replace('CAMEL_TASK_DONE', '')
-                    subtask_output_msgs.append(output_msg)
+                    # output_msg = assistant_response.msg.content.replace('CAMEL_TASK_DONE', '')
+                    # subtask_output_msgs.append(output_msg)
 
                     # send_message_to_ui(
                     #     role="user",
@@ -369,14 +395,14 @@ def main(
 
         with st.expander(f"# 📝 {subtask_id}:\n\nSummary"):
             send_summary_to_ui(output_msg=output_msg)
-    
-    all_output_msgs = "\n".join(subtask_output_msgs)
-    with st.expander("# 📝 Final Summary"):
-        report_context_text = report_agent.run(
-            context_text=all_output_msgs,
-            task_prompt=task_prompt,
-        )
-        send_summary_to_ui(output_msg=report_context_text)
+
+    # all_output_msgs = "\n".join(subtask_output_msgs)
+    # with st.expander("# 📝 Final Summary"):
+    #     report_context_text = report_agent.run(
+    #         context_text=all_output_msgs,
+    #         task_prompt=task_prompt,
+    #     )
+    #     send_summary_to_ui(output_msg=report_context_text)
 
 
 def get_insights_from_environment(
@@ -402,13 +428,16 @@ def get_insights_from_environment(
 
     labels_sets = [list(labels_set) for labels_set in environment_record.keys()]
 
-    _, _, _, labels_retrieved_sets = multi_agent.get_retrieval_index_from_environment(
-        labels_sets=labels_sets, target_labels=target_labels
+    _, _, _, labels_retrieved_sets = (
+        multi_agent.get_retrieval_index_from_environment(
+            labels_sets=labels_sets, target_labels=target_labels
+        )
     )
 
     # Retrive the necessaray insights from the environment
     retrieved_insights = [
-        environment_record[tuple(label_set)] for label_set in labels_retrieved_sets
+        environment_record[tuple(label_set)]
+        for label_set in labels_retrieved_sets
     ]
 
     insights_none_pre_subtask = insight_agent.run(context_text=context_text)
@@ -487,21 +516,23 @@ def send_message_to_ui(role="", role_name="", message=""):
     if role not in ["user", "assistant"]:
         raise ValueError("The role should be one of 'user' or 'assistant'.")
 
-    printed_message = message.replace('Next request.', '').replace('CAMEL_TASK_DONE', 'TASK_DONE').replace('None', '')
+    printed_message = (
+        message.replace("Next request.", "")
+        .replace("CAMEL_TASK_DONE", "TASK_DONE")
+        .replace("None", "")
+    )
     patterns = [
         r"Thought:\s*",
         r"Action:\s*",
         r"Feedback:\s*",
         r"Instruction:\s*",
-        r"Input:\s*"
+        r"Input:\s*",
     ]
     for pattern in patterns:
         printed_message = re.sub(pattern, "", printed_message)
 
     with st.chat_message(role):
-        st.markdown(
-            f"AI {role}: {role_name}\n\n{printed_message}"
-        )
+        st.markdown(f"AI {role}: {role_name}\n\n{printed_message}")
 
     # Save the messages
     with open("downloads/CAMEL_multi_agent_output.md", "a") as file:
