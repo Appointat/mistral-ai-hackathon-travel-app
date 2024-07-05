@@ -20,8 +20,17 @@ from agents.mind_map_agent import MindMapAgent
 
 
 async def async_main(task_prompt: str, model_type=None):
-    model_type = ModelType.GPT_4O
+    model_type = ModelType.GPT_4_TURBO
     # task_prompt = "Develop a trading bot for the stock market"
+
+    task_prompt = """
+Compose a very challenging system design problem for deep learning, and then solve this difficult issue step by step.
+    """
+
+    #     task_prompt = """
+    # Suppose there is a criteria of the assessment that evaluates students' learning outcomes. It can assess based on the student's latest responses, building upon existing achievements. For example, if a student answers a question correctly about knowledge A&B, it indicates that their mastery of A and B (possibly represented as a complex vector) has **improved**, which should be noted down. Conversely, if they answer incorrectly, their mastery has declined.
+    # Therefore, the TASK is to create a set of detailed **quantifiable** evaluation criteria to promote education in Deep Learning, by the similar method in the provided example.
+    # """
 
     agent_kwargs = {
         role: dict(
@@ -42,7 +51,7 @@ async def async_main(task_prompt: str, model_type=None):
         user_agent_kwargs=agent_kwargs["user"],
         task_prompt=task_prompt,
         with_task_specify=False,
-        output_language="Chinese",
+        output_language="English",
     )
 
     print(Fore.RED + f"Final task prompt:\n{role_play_session.task_prompt}\n")
