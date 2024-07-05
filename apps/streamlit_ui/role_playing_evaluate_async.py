@@ -125,12 +125,12 @@ async def async_main(task_prompt: str, model_type=None):
         input_msg = assistant_response.msg
 
     # Generate a mind map in HTML/CSS based on the chat history
-    chat_history = role_play_session.assistant_agent.memory.retrieve()
-    mind_map_agent = MindMapAgent(
-        model_type=model_type,
-        model_config=ChatGPTConfig(max_tokens=4096, temperature=0.7),
-    )
-    mind_map_agent.run(chat_history)
+    # chat_history = role_play_session.assistant_agent.memory.retrieve()
+    # mind_map_agent = MindMapAgent(
+    #     model_type=model_type,
+    #     model_config=ChatGPTConfig(max_tokens=4096, temperature=0.7),
+    # )
+    # mind_map_agent.run(chat_history)
 
 
 async def yield_message(role: str, role_name: str, message: str):
