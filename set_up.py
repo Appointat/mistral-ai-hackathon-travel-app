@@ -1,10 +1,15 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import StreamingResponse
 
-# from apps.streamlit_ui.multi_agents_async import async_main
-from apps.streamlit_ui.role_playing_evaluate_async import async_main as role_playing_evaluate_async_main
-from apps.streamlit_ui.role_playing_async_lesson_plan import async_main as role_playing_async_lesson_plan_main
-from apps.streamlit_ui.generate_quesion_and_answers import async_main as generate_quesion_and_answers_main
+from apps.streamlit_ui.generate_quesion_and_answers import (
+    async_main as generate_quesion_and_answers_main,
+)
+from apps.streamlit_ui.role_playing_async_lesson_plan import (
+    async_main as role_playing_async_lesson_plan_main,
+)
+from apps.streamlit_ui.role_playing_evaluate_async import (
+    async_main as role_playing_evaluate_async_main,
+)
 
 app = FastAPI()
 
